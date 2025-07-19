@@ -1,0 +1,259 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Name - Terminal Portfolio</title>
+  <meta name="description" content="Portfolio of Your Name, a Full Stack Developer">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .typewriter::after {
+      content: '|';
+      display: inline-block;
+      animation: blink 0.7s infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .command::before {
+      content: '> ';
+      color: #00FF00;
+    }
+    .dark .command::before {
+      color: #00FF00;
+    }
+    #terminal-input {
+      background: none;
+      border: none;
+      outline: none;
+      color: inherit;
+      font-family: 'JetBrains Mono', monospace;
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-black text-green-500" id="theme-body">
+  <!-- Header -->
+  <header class="fixed top-0 w-full bg-black border-b border-green-500 z-10" id="header">
+    <div class="container mx-auto p-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold typewriter">[yourname@portfolio ~]$</h1>
+      <button
+        onclick="executeCommand('toggle-theme')"
+        class="command p-2 bg-green-500 text-black rounded-md hover:bg-green-400 transition"
+        id="theme-toggle"
+      >
+        toggle-theme
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-20 container mx-auto px-4">
+    <!-- Terminal Interface -->
+    <section class="py-4">
+      <div class="bg-black border border-green-500 p-4 rounded-md" id="terminal-box">
+        <p class="mb-2 text-green-500" id="terminal-prompt">Type a command: <span class="command">help</span> for options</p>
+        <div class="flex items-center">
+          <span class="command"></span>
+          <input
+            type="text"
+            id="terminal-input"
+            placeholder="Enter command..."
+            class="text-green-500 dark:text-green-500"
+            autofocus
+          >
+        </div>
+        <div id="terminal-output" class="mt-2ximately text-gray-400"></div>
+      </div>
+    </section>
+
+    <!-- Home Section -->
+    <section id="home" class="py-4">
+      <h2 class="text-2xl font-bold typewriter mb-4">[ Welcome ]</h2>
+      <p class="mb-4">user@portfolio:~$ whoami</p>
+      <p>Full Stack Developer | AI Enthusiast</p>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-4 hidden">
+      <h2 class="text-2xl font-bold typewriter mb-4">[ Projects ]</h2>
+      <p class="mb-4">user@portfolio:~$ ls projects</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-black border border-green-500 p-4 rounded-md">
+          <h3 class="text-lg font-bold">project-one</h3>
+          <p class="text-gray-400">Web app with React and Node.js.</p>
+          <a href="#" class="command hover:text-green-300 transition">view</a>
+        </div>
+        <div class="bg-black border border-green-500 p-4 rounded-md">
+          <h3 class="text-lg font-bold">project-two</h3>
+          <p class="text-gray-400">AI chatbot with Python and TensorFlow.</p>
+          <a href="#" class="command hover:text-green-300 transition">view</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-4 hidden">
+      <h2 class="text-2xl font-bold typewriter mb-4">[ Contact ]</h2>
+      <p class="mb-4">user@portfolio:~$ contact</p>
+      <p class="mb-4">Reach out via:</p>
+      <div class="flex flex-col md:flex-row md:space-x-4 space-y-2 md:space-y-0">
+        <a href="#" class="command hover:text-green-300 transition">email</a>
+        <a href="#" class="command hover:text-green-300 transition">linkedin</a>
+        <a href="#" class="command hover:text-green-300 transition">github</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-black border-t border-green-500 p-4 text-center" id="footer">
+    <p>© 2025 Your Name. All rights reserved.</p>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const body = document.getElementById('theme-body');
+      const header = document.getElementById('header');
+      const footer = document.getElementById('footer');
+      const input = document.getElementById('terminal-input');
+      const prompt = document.getElementById('terminal-prompt');
+      const terminalBox = document.getElementById('terminal-box');
+      const isDark = body.classList.toggle('dark');
+      body.classList.toggle('bg-black', !isDark);
+      body.classList.toggle('bg-white', isDark);
+      body.classList.toggle('text-green-500', !isDark);
+      body.classList.toggle('text-black', isDark);
+      header.classList.toggle('bg-black', !isDark);
+      header.classList.toggle('bg-white', isDark);
+      header.classList.toggle('border-green-500', !isDark);
+      header.classList.toggle('border-black', isDark);
+      footer.classList.toggle('bg-black', !isDark);
+      footer.classList.toggle('bg-white', isDark);
+      footer.classList.toggle('border-green-500', !isDark);
+      footer.classList.toggle('border-black', isDark);
+      terminalBox.classList.toggle('bg-black', !isDark);
+      terminalBox.classList.toggle('bg-white', isDark);
+      terminalBox.classList.toggle('border-green-500', !isDark);
+      terminalBox.classList.toggle('border-black', isDark);
+      prompt.classList.toggle('text-green-500', !isDark);
+      prompt.classList.toggle('text-black', isDark);
+      const projectCards = document.querySelectorAll('#projects > div > div');
+      projectCards.forEach(card => {
+        card.classList.toggle('bg-black', !isDark);
+        card.classList.toggle('bg-white', isDark);
+        card.classList.toggle('border-green-500', !isDark);
+        card.classList.toggle('border-black', isDark);
+        const p = card.querySelector('p');
+        p.classList.toggle('text-gray-400', !isDark);
+        p.classList.toggle('text-gray-600', isDark);
+      });
+      document.getElementById('theme-toggle').textContent = isDark ? 'dark-theme' : 'light-theme';
+      input.classList.toggle('text-green-500', !isDark);
+      input.classList.toggle('text-black', isDark);
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
+      return 'Theme toggled.';
+    }
+
+    const commands = {
+      'help': () => 'Available commands: home, projects, contact, toggle-theme',
+      'home': () => {
+        document.getElementById('home').classList.remove('hidden');
+        document.getElementById('projects').classList.add('hidden');
+        document.getElementById('contact').classList.add('hidden');
+        return 'Displaying home...';
+      },
+      'projects': () => {
+        document.getElementById('home').classList.add('hidden');
+        document.getElementById('projects').classList.remove('hidden');
+        document.getElementById('contact').classList.add('hidden');
+        return 'Listing projects...';
+      },
+      'contact': () => {
+        document.getElementById('home').classList.add('hidden');
+        document.getElementById('projects').classList.add('hidden');
+        document.getElementById('contact').classList.remove('hidden');
+        return 'Showing contact info...';
+      },
+      'toggle-theme': toggleTheme
+    };
+
+    function executeCommand(input) {
+      const outputDiv = document.getElementById('terminal-output');
+      input = input.trim().toLowerCase();
+      if (commands[input]) {
+        const output = commands[input]();
+        outputDiv.textContent = output;
+        outputDiv.classList.remove('text-red-500');
+        outputDiv.classList.add('text-gray-400', 'dark:text-gray-400');
+      } else {
+        outputDiv.textContent = "Command not found. Try 'help'.";
+        outputDiv.classList.remove('text-gray-400', 'dark:text-gray-400');
+        outputDiv.classList.add('text-red-500');
+      }
+    }
+
+    // Terminal Input Handler
+    document.getElementById('terminal-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const input = e.target.value;
+        executeCommand(input);
+        e.target.value = '';
+      }
+    });
+
+    // Load theme from localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('theme') === 'light') {
+        executeCommand('toggle-theme');
+      }
+      document.getElementById('home').classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
